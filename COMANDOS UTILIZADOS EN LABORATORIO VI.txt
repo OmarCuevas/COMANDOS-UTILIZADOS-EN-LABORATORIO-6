@@ -1,0 +1,387 @@
+********************- Comandos para laboratorio del modulo VI SO3-**************************************
+==============================================================================================================
+==============================================================================================================
+
+ Practica 1 - Cifrado
+
+===============================================================================================================
+
+-------------------------------------------------------------------------------------------------------------------
+
+1-) Instalar GNUPG2:
+
+
+1- sudo dnf install -y gnupg2 (ya viene preeinstalada) 
+
+
+----------------------------------------------------------------------------
+
+2-) Crear el directorio: 
+
+
+1- mkdir prueba
+
+2- ls <========= Para verificar que se creo bien 
+
+3- cd prueba 
+
+4- touch cifrado.txt 
+
+5- sudo nano cifrado.txt 
+
+6- Puedes escribir: "Debajo de mi cama hay un perro muerto, el que diga 2, se lo come muerto" 
+
+7- Cerramos, guardamos y le damos un cat
+
+------------------------------------------------------------------------------------------------
+
+3-) Cifrar cifrado.txt:
+
+1- gpg2 -c cifrado.txt 
+
+2- Te pedira una contraseña 
+
+3- Se creara un documento cifrado
+
+4- Abrelo con cat 
+
+5- Veras que esta cifrado 
+
+---------------------------------------------------------------------------------------------------
+
+4- Descifrar el cifrado.txt 
+
+1- rm -rf cifrado.txt <========== Para eliminar el txt que no esta cifrado.
+
+2- gpg2 cifrado.txt.gpg 
+
+3- ls y estara el archivo no decifrado
+
+===============================================================================================================
+ Practica 2 - IP tables - UFW/Firewall-cmd 
+
+===============================================================================================================
+
+1-) Instalar todos los servicios: ftp 
+
+1- dnf install vsftpd 
+
+2- nano /etc/vsftpd/vsftpd.conf
+
+3- Dentro del archivo de configuracion: 
+
+local_enable=yes
+
+write_enable=yes
+
+y descomentar chroot_local_user=yes
+
+4- Cerramos y guardamos 
+
+5- clear
+
+------------------------------------------------------------------------------------------------------------------
+
+2-) Crear un usuario para ftp:
+
+1- adduser fulanito
+
+2- passwd fulanito
+
+3- ponemos contra
+
+4- la ponemos de nuevo.
+------------------------------------------------------------------------------------------------------------------
+
+3-) Instalamos ftp y entramos <============= En el nodo 2  
+
+1- dnf install ftp
+
+2- ftp 192.168.100.33
+
+3- en usuario ponemos: fulanito
+
+4- la contra: 123
+
+5- salimos con exit
+
+----------------------------------------------------------------------------------------------------------------------
+
+4-) Mostrar el http:
+
+1- curl localhost <===== Aparecera lo que pusimos en la practica cluster de alta disponibilidad
+
+-----------------------------------------------------------------------------------------------------------------
+
+5-) Mostrar ssh: Desde la maquina nodo 
+
+1- ssh so3-omar-cuevas-20241163@192.168.100.33 
+
+----------------------------------------------------------------------------------------------------------------------
+
+6-) Desde el nodo principal:
+
+1- systemctl status httpd 
+
+2- systemctl status vsftpd 
+
+3- systemctl status sshd 
+
+-----------------------------------------------------------------------------------------------------------------
+
+7-) Utilizando IP tables bloquee el trafico del puerto 80, 21 y 22 para bloquear las conexiones hacia ambos servicios muestre los resultados:
+
+   -A: (Estamos especificando una nueva regla) - INPUT: (Estamos especificando el contenido de la regla) -p: para hablar de puerto 
+
+1- iptables -A INPUT -p tcp --dport 80 -j REJECT <--------- http
+
+(Probar que se hicieron los cambios: curl http://192.168.100.33) ---- Antes de esto tiene que estar en ssh en la maquina principal
+
+
+2- iptables -A INPUT -p tcp --dport 21 -j REJECT (Dale pa arriba y solo cambia el puerto) <---------- ftp 
+
+
+(Probar que se hicieron los cambios: exit, sales del ssh y pones ftp 192.168.100.33 
+
+
+3- iptables -A INPUT -p tcp --dport 22 -j REJECT <---------- ssh
+
+ssh so3-omar-cuevas-20241163@192.168.100.33
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+8-) Habilitar nuevamente el trafico:
+
+1- iptables -D INPUT -p tcp --dport 22 -j REJECT <--- activar el puerto ssh 
+
+(Hacemos la prueba) ssh so3-omar-cuevas-20241163@192.168.100.33
+
+
+2- iptables -D INPUT -p TCP --dport 21 -j REJECT <--------- Activar el puerto ftp 
+
+(Hacemos la prueba) (Probar que se hicieron los cambios: exit, sales del ssh y pones ftp 192.168.100.33 
+
+
+3- iptables -D INPUT -p TCP --dport 80 -j REJECT <-------- Activar el puerto http
+
+(Hacemos la prueba) ssh so3-omar-cuevas-20241163@192.168.100.33 / curl http://192.168.100.33
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+9-) Ahora hacerlo con Firewall-cmd 
+
+firewall-cmd --permanent --remove-service=http
+firewall-cmd --permanent --remove-port=21/tcp 
+firewall-cmd --permanent --remove-service=ssh
+
+firewall-cmd --reload 
+
+---------------------------------------------------------
+
+10-) Ahora activarlo: 
+
+firewall-cmd --permanent --add-service=http
+firewall-cmd --permanent --add-service=ssh
+firewall-cmd --permanent --add-port=21/tcp
+firewall-cmd --reload
+===============================================================================================================================================
+
+
+Practica 3 - Instalar IDS (En este caso SURICATA)
+
+===============================================================================================================
+
+1-) Instalar SURICATA
+
+1- sudo dnf install suricata 
+
+--------------------------------------------------------
+
+2-) Crear el archivo donde vamos a crear las reglas:
+
+1- cd /var/lib/suricata/ 
+
+2- Dentro de ahi poner:
+
+mkdir -p rules 
+
+3- cd rules 
+
+4- Ahora tocaria crear un archivo para las reglas 
+
+1- sudo nany myrules:
+
+
+alert top any any -> $HOME_NET any (msg:"ICMP Ping detected"; sid:100041)
+alert top any any -> $HOME_NET 21 (msg:"Traffic to port 21 detected"; sid:10002)
+alert top any any -> $HOME_NET 22 (msg:"Traffic to port 22 detected"; sid:10003)
+alert top any any -> $HOME_NET 80 (msg:"Traffic to port 80 detected"; sid:10004)
+
+2- Salimos y guaradmos. 
+
+
+---------------------------------------------------------------------
+
+3-) Configurar el archivo de configuracion de Suricata
+
+1- nano /etc/suricata/suricata.yaml
+
+Y en la linea de Homne_Net "[192.168.100.0/24"
+
+
+2- Y bajamos a donde dice Suricata to load suricata update managed rules
+
+
+default-rule-path: /var/lib/suricata/rules
+
+rule-files:
+
+   -suricata.rules
+   -myrules 
+
+------------------------------------------------------------
+
+4-) Reiniciamos el servicio de Suricata para que se hagan los cambios
+
+1- sudo systemctl enable suricata
+
+2- sudo systemctl start suricata
+
+--------------------------------------------------------------------
+
+5-)Comando para ver los logs (OSEA DONDE TE VA A AVISAR QUE TE ESTAN DANDO PING)
+
+1- sudo tail -f /var/log/suricata/fast.log
+
+---------------------------------------------------------------------
+
+5- Especificar la interfaz la red
+
+1- sudo suricata -c /etc/suricata/suricata.yaml -i ens33
+
+
+-------------------------------------------------------------------------------
+
+
+6-) Probar dandole ping desde el cmd
+
+
+ping 192.168.100.33 
+
+------------------------------------
+
+
+ssh so3-omar-cuevas-20241163@192.168.100.33 
+
+-------------------------------------------
+
+curl http://192.168.100.33
+
+
+--------------------------------------------
+
+ftp 192.168.100.33 
+
+
+
+
+====================================================================================
+Practica 4 - Configurar 2FA con google authenticator Modulo PAM para Acceso SSH
+
+===============================================================================================================
+
+0- Lo primero que todo hay instalar la aplicacion de Google Authenticator en nuestro celular, para escanear el codigo qr 
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+1-) Instalar Google Authenticator:
+
+
+1- sudo dnf install -y epel-release 
+
+2- sudo dnf install -y google-authenticator qrencode
+
+-------------------------------------------------------------------------------------
+
+2-) Configurar el archivo de configuracion de pam:
+
+1- sudo nano /etc/pam.d/sshd:
+
+En lo ultimo poner lo siguiente: 
+
+auth    required   pam_google_authenticator.so     <===================== Esto indica que el sistema debe requerir la autenticación de dos factores utilizando Google Authenticator.
+
+2- Salimos y guardamos 
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+3-) Ahora configurar el archivo de configuracion de ssh
+
+1-) sudo nano /etc/ssh/sshd_config:
+
+1- Buscar KbdInteractiveAuthentication yes 
+
+2- UsePAM yes <======== Aunque creo que ya viene en yes, por defecto.
+
+3- PasswordAuthentication yes <=========== Creo que viene en comentario, quitale de comentario.
+
+
+4- PubkeyAuthentication no <============== Quitar comentario 
+
+
+5- ChallengeResponseAuthentication yes <======== Quitar si esta en comentario.
+
+
+6- Salimos y guardamos.
+
+
+----------------------------------------------------------------------------------------------------------------------
+
+4-) Reiniciar el servicio de ssh
+
+
+1- sudo systemctl restart sshd
+
+
+2- sudo systemctl status sshd 
+
+--------------------------------------------------------------------------------------------------------------
+
+5-) Escanear el codigo QR
+
+
+1- google-authenticator
+
+
+2- le damos yes
+
+
+3- escaneamos el codigo en la app de Google Authenticator 
+
+4- Yes a todo.
+
+------------------------------------------------------------------------------------------------------------
+
+6-) Asignarle los permisos de escritura a Google Authentication 
+
+1- ls -l ~/.google_authenticator <========== Veremos que solamente esta en lectura 
+
+
+2- chmod 600 ~/.google_authenticator <======== Para asignarle os permisos de escritura 
+
+
+---------------------------------------------------------------------------------------------------------
+
+7-) Probar que todo esta bien.
+
+1- Con ssh desde tu maquina host, a la ip del servidor 
+
+
+
+
+
+
+
+
