@@ -378,8 +378,50 @@ auth    required   pam_google_authenticator.so     <===================== Esto i
 
 1- Con ssh desde tu maquina host, a la ip del servidor 
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
+*instalar libdaq
+ 
+ git clone https://github.com/snort3/libdaq.git 
+ cd libdaq/ 
+ ./bootstrap 
+ ./configure
+ sudo make install 
+ sudo ldconfig 
+ cd ../ 
+ 
+ *instalar snort
+ git clone https://github.com/snort3/snort3.git 
+ cd snort3 
+ export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH 
+ export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:$PKG_CONFIG_PATH 
+ export CFLAGS="-O3" 
+ export CXXFLAGS="-O3 -fno-rtti" 
+ ./configure_cmake.sh --prefix=/usr/local/snort --enable-tcmalloc 
+ 
+ cd build/ 
+ make -j$(nproc) 
+ sudo make -j$(nproc) install 
+ cd ../../ 
+ sudo ldconfig 
+ /usr/local/snort/bin/snort
+ sudo ln -s /usr/local/snort/bin/snort /usr/bin/snort
+ snort -V
+ 
+ git clone https://github.com/joanbono/Snorter.git
+ cd Snorter/src
+ 
+ bash Snorter.sh -h
+ 
+ bash Snorter.sh -o <oinkcode> -i <interface>
+ 
+ snort -v
+ 
+ sudo nano /usr/local/snort/etc/snort/snort.lua
+ 
+ sudo nano /usr/local/snort/etc/snort/local.rules
+ 
+ alert tcp any any -> any any
 
 
 
