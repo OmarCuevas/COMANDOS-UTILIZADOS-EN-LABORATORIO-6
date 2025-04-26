@@ -456,10 +456,10 @@ cat <<EOF > ~/website-sync/index.html
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Práctica Docker + Rsync</title>
+    <title>AQUI ESCRIBE LO QUE TU QUIERAS</title>
 </head>
 <body>
-    <h1>¡Funciona!</h1>
+    <h1>Funciona!</h1>
     <p>Este contenido se sincroniza desde Server2 a Server1</p>
 </body>
 </html>
