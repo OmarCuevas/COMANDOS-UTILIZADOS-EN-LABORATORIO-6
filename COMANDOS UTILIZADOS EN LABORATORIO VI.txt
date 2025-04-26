@@ -423,6 +423,109 @@ auth    required   pam_google_authenticator.so     <===================== Esto i
  
  alert tcp any any -> any any
 
+--------------------------------------------------------------------------------------------
+
+
+
+Práctica Docker Nginx con Rsync - CentOS 8
+Configuración inicial en ambos servidores
+Actualizar el sistema e instalar rsync en ambos servidores:
+
+sudo dnf update -y
+sudo dnf install -y rsync
+Configuración en Server1 (servidor Docker)
+1. Instalar Docker
+sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+sudo dnf install -y docker-ce docker-ce-cli containerd.io
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
+newgrp docker
+2. Preparar directorio para el volumen
+sudo mkdir -p /home/website
+sudo chown -R $USER:$USER /home/website
+3. Desplegar contenedor Nginx
+docker run -d --name nginx-web -p 8080:80 -v /home/website:/usr/share/nginx/html nginx
+4. Configurar firewall
+sudo firewall-cmd --add-port=8080/tcp --permanent
+sudo firewall-cmd --reload
+Configuración en Server2 (servidor de contenido)
+1. Crear directorio para el sitio web
+mkdir -p ~/website-sync
+2. Crear archivo index.html de ejemplo
+cat <<EOF > ~/website-sync/index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Práctica Docker + Rsync</title>
+</head>
+<body>
+    <h1>¡Funciona!</h1>
+    <p>Este contenido se sincroniza desde Server2 a Server1</p>
+</body>
+</html>
+EOF
+3. Configurar SSH sin contraseña hacia Server1
+ssh-keygen -t rsa (presionar Enter para todas las opciones)
+ssh-copy-id usuario@ip-server1
+4. Crear script de sincronización
+cat <<EOF > ~/sync-website.sh
+#!/bin/bash
+rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ~/website-sync/ usuario@ip-server1:/home/website/
+EOF
+
+chmod +x ~/sync-website.sh
+5. Configurar sincronización automática con cron
+(crontab -l 2>/dev/null; echo "*/5 * * * * $HOME/sync-website.sh") | crontab -
+Verificación del funcionamiento
+Ejecutar sincronización manual desde Server2:
+
+~/sync-website.sh
+Verificar en Server1 que el archivo se copió:
+
+ls -l /home/website/
+cat /home/website/index.html
+Acceder al sitio web:
+
+curl http://localhost:8080
+o desde un navegador:
+
+http://ip-server1:8080
+Solución de problemas
+Si el puerto 8080 no responde:
+
+Verificar que el contenedor está corriendo: docker ps
+
+Revisar logs: docker logs nginx-web
+
+Si hay problemas de permisos:
+
+sudo chmod -R 755 /home/website
+sudo chown -R $USER:$USER /home/website
+Para reiniciar el contenedor:
+
+docker restart nginx-web
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
