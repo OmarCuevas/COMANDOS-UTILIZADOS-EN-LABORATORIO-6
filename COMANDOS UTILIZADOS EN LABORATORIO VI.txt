@@ -426,10 +426,8 @@ auth    required   pam_google_authenticator.so     <===================== Esto i
 --------------------------------------------------------------------------------------------
 
 
+Práctica Docker Nginx 
 
-Práctica Docker Nginx con Rsync - CentOS 8
-Configuración inicial en ambos servidores
-Actualizar el sistema e instalar rsync en ambos servidores:
 
 sudo dnf update -y
 sudo dnf install -y rsync
@@ -459,7 +457,7 @@ cat <<EOF > ~/website-sync/index.html
     <title>AQUI ESCRIBE LO QUE TU QUIERAS</title>
 </head>
 <body>
-    <h1>Funciona!</h1>
+    <h1>Omar A. Cuevas De La Cruz #20241163 </h1> <=========== AQUI PUEDES ESCRIBIR TU NOMOBRE Y MATRICULA.
     <p>Este contenido se sincroniza desde Server2 a Server1</p>
 </body>
 </html>
