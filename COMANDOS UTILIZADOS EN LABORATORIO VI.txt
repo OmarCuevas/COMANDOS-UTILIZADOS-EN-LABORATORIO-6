@@ -510,6 +510,25 @@ docker restart nginx-web
 
 
 
+Puedes editar los repositorios para que apunten al archivo de archivos antiguos de CentOS:
+
+bash
+Copiar
+Editar
+sudo sed -i 's|mirror.centos.org|vault.centos.org|g' /etc/yum.repos.d/CentOS-*.repo
+Y luego, deshabilitar los repositorios mirrorlist y habilitar baseurl:
+
+bash
+Copiar
+Editar
+sudo sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*.repo
+sudo sed -i 's|^#baseurl=|baseurl=|g' /etc/yum.repos.d/CentOS-*.repo
+3. Actualiza YUM:
+bash
+Copiar
+Editar
+sudo dnf clean all
+sudo dnf makecache
 
 
 
